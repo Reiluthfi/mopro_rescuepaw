@@ -1,17 +1,10 @@
-# mopro_rescuepaw
+Flutter Project Untuk Memenuhi Matakuliah Pemrograman Perangkat Bergerak 
+Anggota: 
+Reiluthfi Shidqi Wienarya - 103022300112, 
+Rosa Ardila - 103022400022, 
+Nasywa Azalia Andrean - 103022430012, 
+Rodzy Mahri Salim - 103022400001
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Jangan Sentuh Branch Dev/Main
+# kalau mau push alurnya Branch Personal -> dev -> main
+# Habis Clone pake Branch Personal/<nama> masing masing
