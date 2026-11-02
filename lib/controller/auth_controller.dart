@@ -1,10 +1,8 @@
 import '../model/user_model.dart';
 
 class AuthController {
-  // Mock session storage untuk simulasi akun yang sedang login
   static UserModel? currentUser;
 
-  // Simulasi Register
   static bool register(
     String name,
     String email,
@@ -25,10 +23,8 @@ class AuthController {
     return false;
   }
 
-  // Simulasi Login
   static bool login(String email, String password) {
     if (email.isNotEmpty && password.isNotEmpty) {
-      // Jika belum ada register, buatkan data dummy untuk testing
       currentUser ??= UserModel(
         uid: '1',
         name: 'Maya Chen',
@@ -41,7 +37,6 @@ class AuthController {
     return false;
   }
 
-  // Logout
   static void logout() {
     currentUser = null;
   }
