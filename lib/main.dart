@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'page/splash_onboarding_page.dart'; // Tetap arahkan ke awal modul auth
+import 'page/splash_onboarding_page.dart';
 
 void main() {
   runApp(const MyApp());
