@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../controller/auth_controller.dart';
 import 'register_page.dart';
-import 'profile_page.dart';
+import 'home_screen.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,9 +23,12 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     if (success) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ProfilePage()),
+      Get.offAll(() => HomeScreen());
+    } else {
+      Get.snackbar(
+        'Gagal',
+        'Email atau password salah',
+        snackPosition: SnackPosition.BOTTOM,
       );
     }
   }
