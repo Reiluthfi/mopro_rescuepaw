@@ -8,8 +8,8 @@ publish_to: 'none' # Private app, prevents accidental publishing to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.13.4
-  flutter: 3.47.5 # Exact version, used by CI (flutter-version-file) and FVM
+  sdk: '>=3.13.4 <4.0.0'
+  flutter: '>=3.47.5'
 
 dependencies:
   flutter:
