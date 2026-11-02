@@ -274,7 +274,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             const Text('User role'),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _selectedRole,
+              initialValue: _selectedRole,
               decoration: const InputDecoration(border: OutlineInputBorder()),
               items: ['Reporter', 'Volunteer', 'Adopter'].map((role) {
                 return DropdownMenuItem(value: role, child: Text(role));
