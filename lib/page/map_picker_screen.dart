@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 
 // Komponen standalone yang nanti dipanggil oleh form Modul 2
 class MapPickerScreen extends StatelessWidget {
+  const MapPickerScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

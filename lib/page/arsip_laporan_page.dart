@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -136,7 +139,9 @@ class _ReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () => Get.to(() => LaporanDetailPage(item: item)),
+      child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: _C.surface,
@@ -145,7 +150,7 @@ class _ReportCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _Thumbnail(imageUrl: item.imageUrl),
+          _Thumbnail(imageUrl: item.imageUrl, photoPath: item.photoPath),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -174,15 +179,18 @@ class _ReportCard extends StatelessWidget {
               ],
             ),
           ),
+          const Icon(Icons.chevron_right_rounded, color: _C.textSecondary),
         ],
       ),
+    ),
     );
   }
 }
 
 class _Thumbnail extends StatelessWidget {
-  const _Thumbnail({this.imageUrl});
+  const _Thumbnail({this.imageUrl, this.photoPath});
   final String? imageUrl;
+  final String? photoPath;
 
   @override
   Widget build(BuildContext context) {
@@ -198,13 +206,7 @@ class _Thumbnail extends StatelessWidget {
       child: SizedBox(
         width: size,
         height: size,
-        child: imageUrl == null
-            ? placeholder
-            : Image.network(
-                imageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => placeholder,
-              ),
+        child: _buildImage(imageUrl, photoPath, placeholder),
       ),
     );
   }
@@ -270,6 +272,121 @@ class _ExportButton extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
+      ),
+    );
+  }
+}
+
+/// Shows a network image, a local file image, or the placeholder.
+Widget _buildImage(String? url, String? path, Widget placeholder) {
+  if (url != null) {
+    return Image.network(url,
+        fit: BoxFit.cover, errorBuilder: (_, __, ___) => placeholder);
+  }
+  if (path != null && !kIsWeb) {
+    return Image.file(File(path),
+        fit: BoxFit.cover, errorBuilder: (_, __, ___) => placeholder);
+  }
+  return placeholder;
+}
+
+class LaporanDetailPage extends StatelessWidget {
+  const LaporanDetailPage({super.key, required this.item});
+  final LaporanModel item;
+
+  @override
+  Widget build(BuildContext context) {
+    final placeholder = Container(
+      color: const Color(0xFFE2E8F0),
+      alignment: Alignment.center,
+      child: const Icon(Icons.pets, size: 64, color: _C.textSecondary),
+    );
+
+    return Scaffold(
+      backgroundColor: _C.background,
+      appBar: AppBar(
+        backgroundColor: _C.background,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        titleSpacing: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 20, color: _C.textPrimary),
+          onPressed: Get.back,
+        ),
+        title: const Text(
+          'Report Detail',
+          style: TextStyle(
+            color: _C.textPrimary,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: SizedBox(
+                  height: 200,
+                  width: double.infinity,
+                  child: _buildImage(item.imageUrl, item.photoPath, placeholder),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                item.title,
+                style: const TextStyle(
+                  color: _C.textPrimary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 10),
+              _StatusChip(status: item.status),
+              const SizedBox(height: 20),
+              _DetailRow(label: 'Date reported', value: item.date),
+              _DetailRow(label: 'Animal type', value: item.animalType),
+              _DetailRow(label: 'Location', value: item.location),
+              _DetailRow(label: 'Condition description', value: item.description),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, this.value});
+  final String label;
+  final String? value;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = (value == null || value!.isEmpty) ? '-' : value!;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _C.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _C.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: const TextStyle(color: _C.textSecondary, fontSize: 12)),
+          const SizedBox(height: 4),
+          Text(text,
+              style: const TextStyle(color: _C.textPrimary, fontSize: 15)),
+        ],
       ),
     );
   }

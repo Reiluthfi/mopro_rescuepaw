@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../model/laporan_model.dart';
+import '../model/report.dart';
+import 'ctr_report.dart';
+import '../page/map_picker_screen.dart';
+import 'arsip_laporan_controller.dart';
+
 class BuatLaporanController extends GetxController {
   final formKey = GlobalKey<FormState>();
   final descriptionController = TextEditingController();
@@ -13,16 +19,25 @@ class BuatLaporanController extends GetxController {
   final locationLabel = RxnString(); // TODO: set from map picker
   final isSubmitting = false.obs;
 
+  double? _lat;
+  double? _lng;
+
   void pickFromCamera() {
-    // TODO: ImagePicker().pickImage(source: ImageSource.camera)
+    photoPath.value = 'dummy_camera_photo.jpg'; // TODO: ImagePicker camera
   }
 
   void pickFromGallery() {
-    // TODO: ImagePicker().pickImage(source: ImageSource.gallery)
+    photoPath.value = 'dummy_gallery_photo.jpg'; // TODO: ImagePicker gallery
   }
 
-  void pickLocation() {
-    // TODO: open Google Maps picker, then set locationLabel.value
+  Future<void> pickLocation() async {
+    final result = await Get.to<Map<String, double>>(() => const MapPickerScreen());
+    if (result != null) {
+      _lat = result['lat'];
+      _lng = result['lng'];
+      locationLabel.value =
+          '${result['lat']!.toStringAsFixed(4)}, ${result['lng']!.toStringAsFixed(4)}';
+    }
   }
 
   void setAnimalType(String? value) => selectedAnimalType.value = value;
@@ -55,12 +70,59 @@ class BuatLaporanController extends GetxController {
     try {
       // TODO: send report through REST API
       await Future<void>.delayed(const Duration(milliseconds: 500));
+
+      // Save the report into the archive so it shows up there.
+      final type = selectedAnimalType.value ?? 'Other';
+      final archive = Get.isRegistered<ArsipLaporanController>()
+          ? Get.find<ArsipLaporanController>()
+          : Get.put(ArsipLaporanController());
+      final id = 'R${DateTime.now().millisecondsSinceEpoch}';
+      final title = '$type at ${locationLabel.value}';
+      final description = descriptionController.text.trim();
+
+      archive.addReport(LaporanModel(
+        id: id,
+        title: title,
+        date: _formatDate(DateTime.now()),
+        status: StatusLaporan.pending,
+        animalType: type,
+        description: description,
+        location: locationLabel.value,
+        photoPath: photoPath.value,
+        latitude: _lat,
+        longitude: _lng,
+      ));
+
+      // Also publish it to Beranda so volunteers can take the task.
+      final home = Get.isRegistered<ReportController>()
+          ? Get.find<ReportController>()
+          : Get.put(ReportController());
+      home.addReport(Report(
+        id: id,
+        title: title,
+        description: description,
+        latitude: _lat ?? 0,
+        longitude: _lng ?? 0,
+        status: 'menunggu',
+      ));
+
       Get.back();
+      Get.snackbar('Success', 'Report submitted. It is now on Beranda and in your archive.',
+          snackPosition: SnackPosition.BOTTOM,
+          margin: const EdgeInsets.all(16));
     } catch (_) {
       _showError('Failed to submit the report. Please try again.');
     } finally {
       isSubmitting.value = false;
     }
+  }
+
+  String _formatDate(DateTime d) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
   }
 
   void _showError(String message) {
