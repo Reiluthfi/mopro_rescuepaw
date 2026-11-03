@@ -6,7 +6,9 @@ import 'report_detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   // Injeksi controller ke dalam memory
-  final ReportController controller = Get.put(ReportController());
+  final ReportController controller = Get.isRegistered<ReportController>()
+      ? Get.find<ReportController>()
+      : Get.put(ReportController());
 
   @override
   Widget build(BuildContext context) {

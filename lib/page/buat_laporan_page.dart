@@ -206,7 +206,15 @@ class _PhotoPlaceholder extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             )
-          : const SizedBox.shrink(), // TODO: Image.file(File(photoPath!))
+          : Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.check_circle,
+                    color: Color(0xFF16A34A), size: 36),
+                const SizedBox(height: 8),
+                Text(photoPath!, style: const TextStyle(fontSize: 12)),
+              ],
+            ),
     );
   }
 }

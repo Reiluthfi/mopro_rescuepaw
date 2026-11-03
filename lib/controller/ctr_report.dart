@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 
+import '../model/laporan_model.dart';
 import '../model/report.dart';
+import 'arsip_laporan_controller.dart';
 
 class ReportController extends GetxController {
   // .obs membuat variabel menjadi reactive (didengarkan oleh View)
@@ -34,6 +36,9 @@ class ReportController extends GetxController {
     ]);
   }
 
+  /// Dipanggil saat user mengirim laporan baru -> muncul di Beranda.
+  void addReport(Report report) => reports.insert(0, report);
+
   // Getter untuk memfilter data UI
   List<Report> get availableReports =>
       reports.where((r) => r.status == 'menunggu').toList();
@@ -48,6 +53,12 @@ class ReportController extends GetxController {
     if (index != -1) {
       reports[index].status = 'diproses';
       reports.refresh(); //update List
+
+      // Sinkronkan status ke Arsip Laporan milik pelapor
+      if (Get.isRegistered<ArsipLaporanController>()) {
+        Get.find<ArsipLaporanController>()
+            .updateStatus(id, StatusLaporan.inProgress);
+      }
     }
 
     isTakingTask.value = false;

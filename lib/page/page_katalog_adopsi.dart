@@ -7,7 +7,9 @@ import 'page_kelola_pengajuan.dart';
 import 'page_notifikasi.dart';
 
 class PageKatalogAdopsi extends StatelessWidget {
-  final AdopsiController controller = Get.put(AdopsiController());
+  final AdopsiController controller = Get.isRegistered<AdopsiController>()
+      ? Get.find<AdopsiController>()
+      : Get.put(AdopsiController());
 
   PageKatalogAdopsi({super.key});
 
