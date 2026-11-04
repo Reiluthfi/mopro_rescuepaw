@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controller/auth_controller.dart';
-import 'main_shell.dart';
+import 'home_screen.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -12,19 +12,16 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  // Deklarasi controller untuk input form registrasi
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _phoneController = TextEditingController();
 
-  // Variabel untuk menyimpan role yang dipilih (default Volunteer)
   String _selectedRole = 'Volunteer';
   final List<String> _roles = ['Reporter', 'Volunteer', 'Adopter'];
 
   @override
   void dispose() {
-    // Bersihkan controller saat widget dihancurkan untuk mencegah memory leak
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -32,21 +29,97 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
+  bool _isValidEmail(String email) {
+    return GetUtils.isEmail(email);
+  }
+
+  bool _isValidPhone(String phone) {
+    final phoneRegExp = RegExp(r'^[0-9+()\-s]{10,15}$');
+    return phoneRegExp.hasMatch(phone);
+  }
+
+  String? _validatePassword(String password) {
+    if (password.length < 8) {
+      return 'Password minimal harus 8 karakter';
+    }
+    if (!RegExp(r'[A-Z]').hasMatch(password)) {
+      return 'Password harus mengandung minimal 1 huruf kapital';
+    }
+    if (!RegExp(r'[!@#\$&*~_.,\(\)\-]').hasMatch(password)) {
+      return 'Password harus mengandung minimal 1 karakter spesial (!@#\$&*~ dll)';
+    }
+    return null; // Validasi lolos
+  }
+
   void _handleRegister() {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text;
+
+    // Cek field kosong
+    if (name.isEmpty || email.isEmpty || phone.isEmpty || password.isEmpty) {
+      Get.snackbar(
+        'Peringatan',
+        'Semua field harus diisi!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    // Validasi Format Email
+    if (!_isValidEmail(email)) {
+      Get.snackbar(
+        'Format Email Salah',
+        'Contoh email yang benar: nama@domain.com',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    // Validasi Nomor HP
+    if (!_isValidPhone(phone)) {
+      Get.snackbar(
+        'Nomor HP Tidak Valid',
+        'Nomor telepon harus terdiri dari 10-15 digit angka',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    String? passwordError = _validatePassword(password);
+    if (passwordError != null) {
+      Get.snackbar(
+        'Password Lemah',
+        passwordError,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
+      return;
+    }
+
     bool success = AuthController.register(
-      _nameController.text,
-      _emailController.text,
-      _passwordController.text,
-      _phoneController.text,
+      name,
+      email,
+      password,
+      phone,
       _selectedRole,
     );
 
     if (success) {
-      Get.offAll(() => const MainShell());
+      Get.offAll(() => HomeScreen());
     } else {
       Get.snackbar(
         'Gagal',
-        'Mohon lengkapi data registrasi dengan benar',
+        'Terjadi kesalahan saat mendaftarkan akun',
         snackPosition: SnackPosition.BOTTOM,
       );
     }
@@ -94,7 +167,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedRole,
+                initialValue: _selectedRole,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -133,6 +206,7 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 8),
               TextField(
                 controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: 'Enter your email',
                   border: OutlineInputBorder(
@@ -148,6 +222,7 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 8),
               TextField(
                 controller: _phoneController,
+                keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
                   hintText: 'Enter your phone number',
                   border: OutlineInputBorder(
@@ -165,7 +240,8 @@ class _RegisterPageState extends State<RegisterPage> {
                 controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
-                  hintText: 'Enter your password',
+                  hintText: 'Min. 8 chars, 1 capital, 1 symbol',
+                  hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
