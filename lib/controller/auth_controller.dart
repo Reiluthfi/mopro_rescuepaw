@@ -27,9 +27,9 @@ class AuthController {
     if (email.isNotEmpty && password.isNotEmpty) {
       currentUser ??= UserModel(
         uid: '1',
-        name: 'Maya Chen',
+        name: 'Budi Santoso',
         email: email,
-        phoneNumber: '+1 (415) 555-0128',
+        phoneNumber: '08825550128',
         role: 'Volunteer',
       );
       return true;

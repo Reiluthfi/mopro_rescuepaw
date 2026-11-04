@@ -1,9 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../controller/auth_controller.dart';
-import '../model/user_model.dart';
 import 'login_page.dart';
 
+bool _isValidEmail(String email) => GetUtils.isEmail(email);
+bool _isValidPhone(String phone) =>
+    RegExp(r'^[0-9+()\-s]{10,15}$').hasMatch(phone);
+
+String? _validatePassword(String password) {
+  if (password.isNotEmpty) {
+    if (password.length < 8) return 'Password minimal harus 8 karakter';
+    if (!RegExp(r'[A-Z]').hasMatch(password)) {
+      return 'Harus ada minimal 1 huruf kapital';
+    }
+    if (!RegExp(r'[!@#\$&*~_.,\(\)\-]').hasMatch(password)) {
+      return 'Harus ada minimal 1 simbol';
+    }
+  }
+  return null;
+}
+
+void _showSnack(String title, String message, Color bgColor) {
+  Get.snackbar(
+    title,
+    message,
+    snackPosition: SnackPosition.BOTTOM,
+    backgroundColor: bgColor,
+    colorText: bgColor == Colors.yellow ? Colors.black : Colors.white,
+  );
+}
+
+//Halaman Utama Profil
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -12,16 +40,14 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  UserModel? user = AuthController.currentUser;
+  var user = AuthController.currentUser;
 
   void _navigateToEdit() async {
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const EditProfilePage()),
     );
-    setState(() {
-      user = AuthController.currentUser;
-    });
+    setState(() => user = AuthController.currentUser);
   }
 
   @override
@@ -100,7 +126,7 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 12),
               _buildDetailCard(
                 'Phone number',
-                user?.phoneNumber ?? '+1 (415) 555-0128',
+                user?.phoneNumber ?? '+14155550128',
               ),
               const SizedBox(height: 12),
               _buildDetailCard('User role', user?.role ?? 'Volunteer'),
@@ -129,12 +155,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: OutlinedButton(
                   onPressed: () {
                     AuthController.logout();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginPage(),
-                      ),
-                    );
+                    Get.offAll(() => const LoginPage());
                   },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFFCBD5E1)),
@@ -182,7 +203,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-// Halaman Edit Profil
+//Halaman Edit Profil
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
 
@@ -191,33 +212,72 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  late TextEditingController _nameController;
-  late TextEditingController _emailController;
-  late TextEditingController _phoneController;
+  late final TextEditingController _nameC = TextEditingController(
+    text: AuthController.currentUser?.name ?? '',
+  );
+  late final TextEditingController _emailC = TextEditingController(
+    text: AuthController.currentUser?.email ?? '',
+  );
+  late final TextEditingController _phoneC = TextEditingController(
+    text: AuthController.currentUser?.phoneNumber ?? '',
+  );
+  final TextEditingController _passC = TextEditingController();
+
   String _selectedRole = AuthController.currentUser?.role ?? 'Volunteer';
+  final List<String> _roles = ['Reporter', 'Volunteer', 'Adopter'];
 
   @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(
-      text: AuthController.currentUser?.name ?? '',
-    );
-    _emailController = TextEditingController(
-      text: AuthController.currentUser?.email ?? '',
-    );
-    _phoneController = TextEditingController(
-      text: AuthController.currentUser?.phoneNumber ?? '',
-    );
+  void dispose() {
+    _nameC.dispose();
+    _emailC.dispose();
+    _phoneC.dispose();
+    _passC.dispose();
+    super.dispose();
   }
 
   void _saveChanges() {
-    if (AuthController.currentUser != null) {
-      AuthController.currentUser!.name = _nameController.text;
-      AuthController.currentUser!.email = _emailController.text;
-      AuthController.currentUser!.phoneNumber = _phoneController.text;
-      AuthController.currentUser!.role = _selectedRole;
+    final name = _nameC.text.trim();
+    final email = _emailC.text.trim();
+    final phone = _phoneC.text.trim();
+    final pass = _passC.text;
+
+    if (name.isEmpty || email.isEmpty || phone.isEmpty) {
+      return _showSnack(
+        'Peringatan',
+        'Pastikan seluruh data wajib telah diisi!',
+        Colors.yellow,
+      );
     }
-    Navigator.pop(context);
+    if (!_isValidEmail(email)) {
+      return _showSnack(
+        'Format Email Salah',
+        'Gunakan format email yang benar (nama@gmail.com)',
+        Colors.red,
+      );
+    }
+    if (!_isValidPhone(phone)) {
+      return _showSnack(
+        'Nomor HP Tidak Valid',
+        'Nomor telepon harus terdiri dari 10-15 digit angka',
+        Colors.red,
+      );
+    }
+
+    String? passErr = _validatePassword(pass);
+    if (passErr != null) {
+      return _showSnack('Password Lemah', passErr, Colors.red);
+    }
+
+    if (AuthController.currentUser != null) {
+      AuthController.currentUser!
+        ..name = name
+        ..email = email
+        ..phoneNumber = phone
+        ..role = _selectedRole;
+    }
+
+    Get.back();
+    _showSnack('Sukses', 'Profil berhasil diperbarui', const Color(0xFF0F766E));
   }
 
   @override
@@ -229,7 +289,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Get.back(),
         ),
         title: const Text(
           'Edit profile',
@@ -250,35 +310,28 @@ class _EditProfilePageState extends State<EditProfilePage> {
               style: TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 24),
-            const Text('Name'),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
+            _buildTextField('Name', _nameC),
+            _buildTextField('Email', _emailC, type: TextInputType.emailAddress),
+            _buildTextField('Phone number', _phoneC, type: TextInputType.phone),
+            _buildTextField(
+              'New Password (Optional)',
+              _passC,
+              isObscure: true,
+              hint: 'Biarkan kosong jika tidak diubah',
+              helper: 'Gunakan 8+ karakter, 1 huruf kapital dan 1 simbol',
             ),
             const SizedBox(height: 16),
-            const Text('Email'),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
+            const Text(
+              'User role',
+              style: TextStyle(fontWeight: FontWeight.w500),
             ),
-            const SizedBox(height: 16),
-            const Text('Phone number'),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _phoneController,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 16),
-            const Text('User role'),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               initialValue: _selectedRole,
               decoration: const InputDecoration(border: OutlineInputBorder()),
-              items: ['Reporter', 'Volunteer', 'Adopter'].map((role) {
-                return DropdownMenuItem(value: role, child: Text(role));
-              }).toList(),
+              items: _roles
+                  .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                  .toList(),
               onChanged: (val) => setState(() => _selectedRole = val!),
             ),
             const SizedBox(height: 32),
@@ -298,6 +351,37 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    TextInputType? type,
+    bool isObscure = false,
+    String? hint,
+    String? helper,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: controller,
+            keyboardType: type,
+            obscureText: isObscure,
+            decoration: InputDecoration(
+              hintText: hint,
+              helperText: helper,
+              hintStyle: const TextStyle(fontSize: 12),
+              border: const OutlineInputBorder(),
+            ),
+          ),
+        ],
       ),
     );
   }
