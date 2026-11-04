@@ -4,6 +4,33 @@ import 'package:get/get.dart';
 import '../controller/auth_controller.dart';
 import 'login_page.dart';
 
+bool _isValidEmail(String email) => GetUtils.isEmail(email);
+bool _isValidPhone(String phone) =>
+    RegExp(r'^[0-9+()\-s]{10,15}$').hasMatch(phone);
+
+String? _validatePassword(String password) {
+  if (password.isNotEmpty) {
+    if (password.length < 8) return 'Password minimal harus 8 karakter';
+    if (!RegExp(r'[A-Z]').hasMatch(password)) {
+      return 'Harus ada minimal 1 huruf kapital';
+    }
+    if (!RegExp(r'[!@#\$&*~_.,\(\)\-]').hasMatch(password)) {
+      return 'Harus ada minimal 1 simbol';
+    }
+  }
+  return null;
+}
+
+void _showSnack(String title, String message, Color bgColor) {
+  Get.snackbar(
+    title,
+    message,
+    snackPosition: SnackPosition.BOTTOM,
+    backgroundColor: bgColor,
+    colorText: bgColor == Colors.yellow ? Colors.black : Colors.white,
+  );
+}
+
 //Halaman Utama Profil
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -20,9 +47,7 @@ class _ProfilePageState extends State<ProfilePage> {
       context,
       MaterialPageRoute(builder: (context) => const EditProfilePage()),
     );
-    setState(() {
-      user = AuthController.currentUser;
-    });
+    setState(() => user = AuthController.currentUser);
   }
 
   @override
@@ -56,7 +81,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      user?.name ?? 'Budi Santoso',
+                      user?.name ?? 'Maya Chen',
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -178,7 +203,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-// 2. Halaman Edit Profil (Terintegrasi dalam 1 file)
+//Halaman Edit Profil
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
 
@@ -187,127 +212,72 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  late TextEditingController _nameController;
-  late TextEditingController _emailController;
-  late TextEditingController _phoneController;
-  late TextEditingController _passwordController;
+  late final TextEditingController _nameC = TextEditingController(
+    text: AuthController.currentUser?.name ?? '',
+  );
+  late final TextEditingController _emailC = TextEditingController(
+    text: AuthController.currentUser?.email ?? '',
+  );
+  late final TextEditingController _phoneC = TextEditingController(
+    text: AuthController.currentUser?.phoneNumber ?? '',
+  );
+  final TextEditingController _passC = TextEditingController();
+
   String _selectedRole = AuthController.currentUser?.role ?? 'Volunteer';
   final List<String> _roles = ['Reporter', 'Volunteer', 'Adopter'];
 
   @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(
-      text: AuthController.currentUser?.name ?? '',
-    );
-    _emailController = TextEditingController(
-      text: AuthController.currentUser?.email ?? '',
-    );
-    _phoneController = TextEditingController(
-      text: AuthController.currentUser?.phoneNumber ?? '',
-    );
-    _passwordController = TextEditingController();
-  }
-
-  @override
   void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _passwordController.dispose();
+    _nameC.dispose();
+    _emailC.dispose();
+    _phoneC.dispose();
+    _passC.dispose();
     super.dispose();
   }
 
-  bool _isValidEmail(String email) {
-    return GetUtils.isEmail(email);
-  }
-
-  bool _isValidPhone(String phone) {
-    final phoneRegExp = RegExp(r'^[0-9+()\-s]{10,15}$');
-    return phoneRegExp.hasMatch(phone);
-  }
-
-  String? _validatePassword(String password) {
-    if (password.isNotEmpty) {
-      if (password.length < 8) {
-        return 'Password minimal harus 8 karakter';
-      }
-      if (!RegExp(r'[A-Z]').hasMatch(password)) {
-        return 'Password harus mengandung minimal 1 huruf kapital';
-      }
-      if (!RegExp(r'[!@#\$&*~_.,\(\)\-]').hasMatch(password)) {
-        return 'Password harus mengandung minimal 1 karakter spesial (!@#\$&*~ dll)';
-      }
-    }
-    return null;
-  }
-
   void _saveChanges() {
-    final name = _nameController.text.trim();
-    final email = _emailController.text.trim();
-    final phone = _phoneController.text.trim();
-    final password = _passwordController.text;
+    final name = _nameC.text.trim();
+    final email = _emailC.text.trim();
+    final phone = _phoneC.text.trim();
+    final pass = _passC.text;
 
     if (name.isEmpty || email.isEmpty || phone.isEmpty) {
-      Get.snackbar(
+      return _showSnack(
         'Peringatan',
         'Pastikan seluruh data wajib telah diisi!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.yellow,
-        colorText: Colors.black,
+        Colors.yellow,
       );
-      return;
     }
-
     if (!_isValidEmail(email)) {
-      Get.snackbar(
+      return _showSnack(
         'Format Email Salah',
-        'Contoh email yang benar: nama@gmail.com',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+        'Gunakan format email yang benar (nama@gmail.com)',
+        Colors.red,
       );
-      return;
     }
-
     if (!_isValidPhone(phone)) {
-      Get.snackbar(
+      return _showSnack(
         'Nomor HP Tidak Valid',
         'Nomor telepon harus terdiri dari 10-15 digit angka',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+        Colors.red,
       );
-      return;
     }
 
-    String? passwordError = _validatePassword(password);
-    if (passwordError != null) {
-      Get.snackbar(
-        'Password Lemah',
-        passwordError,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
+    String? passErr = _validatePassword(pass);
+    if (passErr != null) {
+      return _showSnack('Password Lemah', passErr, Colors.red);
     }
 
     if (AuthController.currentUser != null) {
-      AuthController.currentUser!.name = name;
-      AuthController.currentUser!.email = email;
-      AuthController.currentUser!.phoneNumber = phone;
-      AuthController.currentUser!.role = _selectedRole;
+      AuthController.currentUser!
+        ..name = name
+        ..email = email
+        ..phoneNumber = phone
+        ..role = _selectedRole;
     }
 
     Get.back();
-    Get.snackbar(
-      'Sukses',
-      'Profil berhasil diperbarui',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: const Color(0xFF0F766E),
-      colorText: Colors.white,
-    );
+    _showSnack('Sukses', 'Profil berhasil diperbarui', const Color(0xFF0F766E));
   }
 
   @override
@@ -340,46 +310,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
               style: TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 24),
-            const Text('Name', style: TextStyle(fontWeight: FontWeight.w500)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 16),
-            const Text('Email', style: TextStyle(fontWeight: FontWeight.w500)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Phone number',
-              style: TextStyle(fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 16),
-            const Text(
+            _buildTextField('Name', _nameC),
+            _buildTextField('Email', _emailC, type: TextInputType.emailAddress),
+            _buildTextField('Phone number', _phoneC, type: TextInputType.phone),
+            _buildTextField(
               'New Password (Optional)',
-              style: TextStyle(fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                hintText: 'Biarkan kosong jika tidak diubah',
-                helperText: 'Gunakan 8+ karakter, 1 huruf kapital & 1 simbol',
-                hintStyle: TextStyle(fontSize: 12),
-                border: OutlineInputBorder(),
-              ),
+              _passC,
+              isObscure: true,
+              hint: 'Biarkan kosong jika tidak diubah',
+              helper: 'Gunakan 8+ karakter, 1 huruf kapital dan 1 simbol',
             ),
             const SizedBox(height: 16),
             const Text(
@@ -388,11 +327,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _selectedRole,
+              initialValue: _selectedRole,
               decoration: const InputDecoration(border: OutlineInputBorder()),
-              items: _roles.map((role) {
-                return DropdownMenuItem(value: role, child: Text(role));
-              }).toList(),
+              items: _roles
+                  .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                  .toList(),
               onChanged: (val) => setState(() => _selectedRole = val!),
             ),
             const SizedBox(height: 32),
@@ -412,6 +351,37 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    TextInputType? type,
+    bool isObscure = false,
+    String? hint,
+    String? helper,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: controller,
+            keyboardType: type,
+            obscureText: isObscure,
+            decoration: InputDecoration(
+              hintText: hint,
+              helperText: helper,
+              hintStyle: const TextStyle(fontSize: 12),
+              border: const OutlineInputBorder(),
+            ),
+          ),
+        ],
       ),
     );
   }
