@@ -48,7 +48,7 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!RegExp(r'[!@#\$&*~_.,\(\)\-]').hasMatch(password)) {
       return 'Password harus mengandung minimal 1 karakter spesial (!@#\$&*~ dll)';
     }
-    return null; // Validasi lolos
+    return null;
   }
 
   void _handleRegister() {
@@ -57,23 +57,21 @@ class _RegisterPageState extends State<RegisterPage> {
     final phone = _phoneController.text.trim();
     final password = _passwordController.text;
 
-    // Cek field kosong
     if (name.isEmpty || email.isEmpty || phone.isEmpty || password.isEmpty) {
       Get.snackbar(
         'Peringatan',
-        'Semua field harus diisi!',
+        'Pastikan seluruh data telah isi!',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orange,
+        backgroundColor: Colors.yellow,
         colorText: Colors.white,
       );
       return;
     }
 
-    // Validasi Format Email
     if (!_isValidEmail(email)) {
       Get.snackbar(
         'Format Email Salah',
-        'Contoh email yang benar: nama@domain.com',
+        'Contoh email yang benar: nama@gmail.com',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -81,7 +79,6 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    // Validasi Nomor HP
     if (!_isValidPhone(phone)) {
       Get.snackbar(
         'Nomor HP Tidak Valid',
@@ -240,7 +237,8 @@ class _RegisterPageState extends State<RegisterPage> {
                 controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
-                  hintText: 'Min. 8 chars, 1 capital, 1 symbol',
+                  hintText: 'Create a password',
+                  helperText: 'Use 8+ characters, including an uppercase letter and a symbol',
                   hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),

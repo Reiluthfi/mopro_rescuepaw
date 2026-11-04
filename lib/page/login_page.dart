@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import '../controller/auth_controller.dart';
 import 'register_page.dart';
-import 'main_shell.dart';
+import 'home_screen.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,19 +16,65 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  bool _isValidEmail(String email) {
+    return GetUtils.isEmail(email);
+  }
+
   void _handleLogin() {
-    bool success = AuthController.login(
-      _emailController.text,
-      _passwordController.text,
-    );
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      Get.snackbar(
+        'Peringatan',
+        'Pastikan seluruh data telah diisi!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.yellow,
+        colorText: Colors.black,
+      );
+      return;
+    }
+
+    if (!_isValidEmail(email)) {
+      Get.snackbar(
+        'Format Email Salah',
+        'Contoh email yang benar: nama@gmail.com',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    if (password.length < 8) {
+      Get.snackbar(
+        'Password Tidak Valid',
+        'Password minimal harus 8 karakter',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    bool success = AuthController.login(email, password);
 
     if (success) {
-      Get.offAll(() => const MainShell());
+      Get.offAll(() => HomeScreen());
     } else {
       Get.snackbar(
-        'Gagal',
-        'Email atau password salah',
+        'Login Gagal',
+        'Periksa kembali email dan password Anda',
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
       );
     }
   }
@@ -73,6 +119,7 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 8),
               TextField(
                 controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: 'Enter your email',
                   border: OutlineInputBorder(
