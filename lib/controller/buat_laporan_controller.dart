@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../model/laporan_model.dart';
 import '../model/report.dart';
@@ -31,12 +32,12 @@ class BuatLaporanController extends GetxController {
   }
 
   Future<void> pickLocation() async {
-    final result = await Get.to<Map<String, double>>(() => const MapPickerScreen());
+    final result = await Get.to<LatLng>(() => const MapPickerScreen());
     if (result != null) {
-      _lat = result['lat'];
-      _lng = result['lng'];
+      _lat = result.latitude;
+      _lng = result.longitude;
       locationLabel.value =
-          '${result['lat']!.toStringAsFixed(4)}, ${result['lng']!.toStringAsFixed(4)}';
+          '${result.latitude.toStringAsFixed(4)}, ${result.longitude.toStringAsFixed(4)}';
     }
   }
 
@@ -47,8 +48,8 @@ class BuatLaporanController extends GetxController {
 
   String? validateDescription(String? value) =>
       (value == null || value.trim().isEmpty)
-          ? 'Please describe the animal\'s condition'
-          : null;
+      ? 'Please describe the animal\'s condition'
+      : null;
 
   Future<void> submit() async {
     final isValid = formKey.currentState?.validate() ?? false;
@@ -80,36 +81,47 @@ class BuatLaporanController extends GetxController {
       final title = '$type at ${locationLabel.value}';
       final description = descriptionController.text.trim();
 
-      archive.addReport(LaporanModel(
-        id: id,
-        title: title,
-        date: _formatDate(DateTime.now()),
-        status: StatusLaporan.pending,
-        animalType: type,
-        description: description,
-        location: locationLabel.value,
-        photoPath: photoPath.value,
-        latitude: _lat,
-        longitude: _lng,
-      ));
+      archive.addReport(
+        LaporanModel(
+          id: id,
+          title: title,
+          date: _formatDate(DateTime.now()),
+          status: StatusLaporan.pending,
+          animalType: type,
+          description: description,
+          location: locationLabel.value,
+          photoPath: photoPath.value,
+          latitude: _lat,
+          longitude: _lng,
+        ),
+      );
 
       // Also publish it to Beranda so volunteers can take the task.
       final home = Get.isRegistered<ReportController>()
           ? Get.find<ReportController>()
           : Get.put(ReportController());
-      home.addReport(Report(
-        id: id,
-        title: title,
-        description: description,
-        latitude: _lat ?? 0,
-        longitude: _lng ?? 0,
-        status: 'menunggu',
-      ));
+      home.addReport(
+        Report(
+          id: id,
+          title: title,
+          description: description,
+          latitude: _lat ?? 0,
+          longitude: _lng ?? 0,
+          status: 'menunggu',
+          locationName: locationLabel.value ?? 'Unknown',
+          distance: 0.0,
+          type: type,
+          dateReported: _formatDate(DateTime.now()),
+        ),
+      );
 
       Get.back();
-      Get.snackbar('Success', 'Report submitted. It is now on Beranda and in your archive.',
-          snackPosition: SnackPosition.BOTTOM,
-          margin: const EdgeInsets.all(16));
+      Get.snackbar(
+        'Success',
+        'Report submitted. It is now on Beranda and in your archive.',
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+      );
     } catch (_) {
       _showError('Failed to submit the report. Please try again.');
     } finally {
@@ -119,8 +131,18 @@ class BuatLaporanController extends GetxController {
 
   String _formatDate(DateTime d) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${d.day} ${months[d.month - 1]} ${d.year}';
   }

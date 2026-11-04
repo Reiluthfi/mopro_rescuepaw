@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'page/splash_onboarding_page.dart';
 
 void main() {
-  
   runApp(const RescuePawApp());
 }
 
