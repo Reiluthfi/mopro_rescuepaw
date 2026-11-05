@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controller/auth_controller.dart';
-import 'home_screen.dart';
+import 'main_shell.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -112,7 +112,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
 
     if (success) {
-      Get.offAll(() => HomeScreen());
+      Get.offAll(() => const MainShell());
     } else {
       Get.snackbar(
         'Gagal',
