@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import '../controller/auth_controller.dart';
 import 'register_page.dart';
-import 'home_screen.dart';
+import 'main_shell.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -67,7 +67,7 @@ class _LoginPageState extends State<LoginPage> {
     bool success = AuthController.login(email, password);
 
     if (success) {
-      Get.offAll(() => HomeScreen());
+      Get.offAll(() => const MainShell());
     } else {
       Get.snackbar(
         'Login Gagal',
